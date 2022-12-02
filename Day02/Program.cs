@@ -1,0 +1,1 @@
+﻿var input = File.ReadAllText("input.txt");
