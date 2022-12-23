@@ -1,21 +1,20 @@
 ﻿var input = File.ReadAllLines("input.txt");
 
-var elves = new List<Position>();
+var elves = new List<(int,int)>();
 
 for (var y = 0; y < input.Length; y++) {
   for (var x = 0; x < input[y].Length; x++) {
     if (input[y][x] == '#') {
-      elves.Add(new Position {X = x, Y = y});
+      elves.Add((x, y));
     }
   }
 }
 
 var step = 0;
 while (true) {
-  var newPositions = new Dictionary<Position, Position>();
-  var startDir = step % 4;
-  foreach (var elf in elves) {
+  var newPositions = new Dictionary<(int, int), (int, int)>();
 
+  foreach (var elf in elves) {
     var around = GetSurrounding(elf);
     if (!elves.Intersect(around).Any()) {
       newPositions.Add(elf, elf);
@@ -26,7 +25,7 @@ while (true) {
           break;
         }
 
-        var directionToTest = (Direction)((startDir + dir) % 4);
+        var directionToTest = (Direction)((step % 4 + dir) % 4);
         var newP = GetPossiblePositions(elf, directionToTest).ToList();
         if (!newP.Intersect(elves).Any()) {
           newPositions.Add(elf, Move(elf, directionToTest));
@@ -56,66 +55,61 @@ while (true) {
   elves = newElves;
 
   if (step == 10) {
-    var yMax = elves.Max(e => e.Y);
-    var yMin = elves.Min(e => e.Y);
-    var xMax = elves.Max(e => e.X);
-    var xMin = elves.Min(e => e.X);
+    var yMax = elves.Max(e => e.Item2);
+    var yMin = elves.Min(e => e.Item2);
+    var xMax = elves.Max(e => e.Item1);
+    var xMin = elves.Min(e => e.Item1);
     var area = (yMax - yMin + 1) * (xMax - xMin + 1);
     Console.Out.WriteLine(area-elves.Count);
   }
 }
 
-Position Move(Position p, Direction d) {
+(int,int) Move((int,int) p, Direction d) {
   return d switch {
-    Direction.North => p with { Y = p.Y - 1 },
-    Direction.South => p with { Y = p.Y + 1 },
-    Direction.West => p with { X = p.X - 1 },
-    Direction.East => p with { X = p.X + 1 },
+    Direction.North => (p.Item1, p.Item2 - 1),
+    Direction.South => (p.Item1, p.Item2 + 1),
+    Direction.West => (p.Item1 - 1, p.Item2),
+    Direction.East => (p.Item1 + 1, p.Item2),
     _ => throw new ArgumentOutOfRangeException(nameof(d), d, null)
   };
 }
 
-IEnumerable<Position> GetSurrounding(Position p) {
-  yield return new Position { Y = p.Y - 1, X = p.X - 1 };
-  yield return p with { Y = p.Y - 1 };
-  yield return new Position { Y = p.Y - 1, X = p.X + 1 };
-  yield return new Position { Y = p.Y + 1, X = p.X - 1 };
-  yield return p with { Y = p.Y + 1 };
-  yield return new Position { Y = p.Y + 1, X = p.X + 1 };
-  yield return p with { X = p.X - 1 };
-  yield return p with { X = p.X + 1 };
+IEnumerable<(int, int)> GetSurrounding((int, int) p) {
+  yield return (p.Item1 - 1, p.Item2 - 1);
+  yield return (p.Item1, p.Item2 - 1);
+  yield return (p.Item1 + 1, p.Item2 - 1);
+  yield return (p.Item1 - 1, p.Item2 + 1);
+  yield return (p.Item1, p.Item2 + 1);
+  yield return (p.Item1 + 1, p.Item2 + 1);
+  yield return (p.Item1 - 1, p.Item2);
+  yield return (p.Item1 + 1, p.Item2);
 }
 
-IEnumerable<Position> GetPossiblePositions(Position p, Direction d) {
+IEnumerable<(int, int)> GetPossiblePositions((int, int) p, Direction d) {
   switch (d) {
     case Direction.North:
-      yield return new Position { Y = p.Y - 1, X = p.X - 1 };
-      yield return p with { Y = p.Y - 1 };
-      yield return new Position { Y = p.Y - 1, X = p.X + 1 };
+      yield return (p.Item1 - 1, p.Item2 - 1); 
+      yield return (p.Item1, p.Item2 - 1); 
+      yield return (p.Item1 + 1, p.Item2 - 1); 
       break;
     case Direction.South:
-      yield return new Position { Y = p.Y + 1, X = p.X - 1 };
-      yield return p with { Y = p.Y + 1 };
-      yield return new Position { Y = p.Y + 1, X = p.X + 1 };
+      yield return (p.Item1 - 1, p.Item2 + 1); 
+      yield return (p.Item1, p.Item2 + 1); 
+      yield return (p.Item1 + 1, p.Item2 + 1); 
       break;
     case Direction.West:
-      yield return new Position { Y = p.Y - 1, X = p.X - 1 };
-      yield return p with { X = p.X - 1 };
-      yield return new Position { Y = p.Y + 1, X = p.X - 1 };
+      yield return (p.Item1 - 1, p.Item2 - 1); 
+      yield return (p.Item1 - 1, p.Item2);
+      yield return (p.Item1 - 1, p.Item2 + 1);
       break;
     case Direction.East:
-      yield return new Position { Y = p.Y - 1, X = p.X + 1 };
-      yield return p with { X = p.X + 1 };
-      yield return new Position { Y = p.Y + 1, X = p.X + 1 };
+      yield return (p.Item1 + 1, p.Item2 - 1); 
+      yield return (p.Item1 + 1, p.Item2);
+      yield return (p.Item1 + 1, p.Item2 + 1); 
       break;
     default:
       throw new ArgumentOutOfRangeException(nameof(d), d, null);
   }
-}
-
-internal record Position {
-  public int X { get; init; }
-  public int Y { get; init; }
 }
 
 internal enum Direction {
