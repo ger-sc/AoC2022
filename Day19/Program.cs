@@ -38,7 +38,6 @@ Parallel.ForEach(blueprints.Take(3), bp => {
 
 Console.Out.WriteLine(pt2);
 
-
 void Mine(Inventory inventory, int minute, Robot? toBuild, Blueprint blueprint, ref int result) {
     while (true) {
         if (minute <= 0) {
@@ -47,67 +46,93 @@ void Mine(Inventory inventory, int minute, Robot? toBuild, Blueprint blueprint, 
             }
         }
         else {
+            var theoreticalGeodes = inventory.Geode;
+            var bots = inventory.GeodeRobot;
+            for (var togo = minute; togo > 0; togo--) {
+                theoreticalGeodes += bots;
+                bots++;
+            }
+            if (theoreticalGeodes < result) {
+                minute = 0;
+                continue;
+            }
             switch (toBuild) {
                 case Robot.Geode:
                     if (CanBuildGeodeRobot(blueprint, inventory)) {
-                        inventory = inventory with { Ore = inventory.Ore - blueprint.GeodeRobot.Ore, Obsidian = inventory.Obsidian - blueprint.GeodeRobot.Obsidian };
-                        inventory = Collect(inventory);
-                        inventory = inventory with { GeodeRobot = inventory.GeodeRobot + 1 };
+                        inventory = inventory with {
+                            Ore = inventory.Ore - blueprint.GeodeRobot.Ore + inventory.OreRobot,
+                            Clay = inventory.Clay - blueprint.GeodeRobot.Clay + inventory.ClayRobot,
+                            Obsidian = inventory.Obsidian - blueprint.GeodeRobot.Obsidian + inventory.ObsidianRobot,
+                            Geode = inventory.Geode + inventory.GeodeRobot,
+                            GeodeRobot = inventory.GeodeRobot + 1
+                        };
                         foreach (var r in CanBuild(inventory)) {
                             Mine(inventory, minute - 1, r, blueprint, ref result);
                         }
                     }
                     else {
                         inventory = Collect(inventory);
-                        minute = minute - 1;
+                        minute -= 1;
                         continue;
                     }
 
                     break;
                 case Robot.Ore:
                     if (CanBuildOreRobot(blueprint, inventory)) {
-                        inventory = inventory with { Ore = inventory.Ore - blueprint.OreRobot.Ore };
-                        inventory = Collect(inventory);
-                        inventory = inventory with { OreRobot = inventory.OreRobot + 1 };
+                        inventory = inventory with {
+                            Ore = inventory.Ore - blueprint.OreRobot.Ore + inventory.OreRobot,
+                            Clay = inventory.Clay - blueprint.OreRobot.Clay + inventory.ClayRobot,
+                            Obsidian = inventory.Obsidian - blueprint.OreRobot.Obsidian + inventory.ObsidianRobot,
+                            Geode = inventory.Geode + inventory.GeodeRobot,
+                            OreRobot = inventory.OreRobot + 1
+                        };
                         foreach (var r in CanBuild(inventory)) {
                             Mine(inventory, minute - 1, r, blueprint, ref result);
                         }
                     }
                     else {
                         inventory = Collect(inventory);
-                        minute = minute - 1;
+                        minute -= 1;
                         continue;
                     }
 
                     break;
                 case Robot.Clay:
                     if (CanBuildClayRobot(blueprint, inventory)) {
-                        inventory = inventory with { Ore = inventory.Ore - blueprint.ClayRobot.Ore };
-                        inventory = Collect(inventory);
-                        inventory = inventory with { ClayRobot = inventory.ClayRobot + 1 };
+                        inventory = inventory with {
+                            Ore = inventory.Ore - blueprint.ClayRobot.Ore + inventory.OreRobot,
+                            Clay = inventory.Clay - blueprint.ClayRobot.Clay + inventory.ClayRobot,
+                            Obsidian = inventory.Obsidian - blueprint.ClayRobot.Obsidian + inventory.ObsidianRobot,
+                            Geode = inventory.Geode + inventory.GeodeRobot,
+                            ClayRobot = inventory.ClayRobot + 1
+                        };
                         foreach (var r in CanBuild(inventory)) {
                             Mine(inventory, minute - 1, r, blueprint, ref result);
                         }
                     }
                     else {
                         inventory = Collect(inventory);
-                        minute = minute - 1;
+                        minute -= 1;
                         continue;
                     }
 
                     break;
                 case Robot.Obsidian:
                     if (CanBuildObsidianRobot(blueprint, inventory)) {
-                        inventory = inventory with { Ore = inventory.Ore - blueprint.ObsidianRobot.Ore, Clay = inventory.Clay - blueprint.ObsidianRobot.Clay };
-                        inventory = Collect(inventory);
-                        inventory = inventory with { ObsidianRobot = inventory.ObsidianRobot + 1 };
+                        inventory = inventory with {
+                            Ore = inventory.Ore - blueprint.ObsidianRobot.Ore + inventory.OreRobot,
+                            Clay = inventory.Clay - blueprint.ObsidianRobot.Clay + inventory.ClayRobot,
+                            Obsidian = inventory.Obsidian - blueprint.ObsidianRobot.Obsidian + inventory.ObsidianRobot,
+                            Geode = inventory.Geode + inventory.GeodeRobot,
+                            ObsidianRobot = inventory.ObsidianRobot + 1
+                        };
                         foreach (var r in CanBuild(inventory)) {
                             Mine(inventory, minute - 1, r, blueprint, ref result);
                         }
                     }
                     else {
                         inventory = Collect(inventory);
-                        minute = minute - 1;
+                        minute -= 1;
                         continue;
                     }
 
